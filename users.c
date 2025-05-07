@@ -7,16 +7,6 @@
 #include <string.h>
 #include "users.h"
 
-typedef struct userinfo{
-    char username[15];  //사용자 이름
-    char password[20];  //비밀번호
-}USERINFO;
-
-typedef struct users{
-    USERINFO arr[10];
-    int size;           //등록된 사용자 수
-}USERS;
-
 int addUser(USERS* users, const USERINFO user)
 {
     if(users->size >= 10) return 0;

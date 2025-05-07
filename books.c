@@ -8,18 +8,6 @@
 #include <stdlib.h>
 #include "books.h"
 
-typedef struct bookinfo{
-    int num;                //순번
-    char bookTitle[100];    //도서 제목
-    char author[50];        //저자명
-    float rating;           //평점
-}BOOKINFO;
-
-typedef struct books{
-    BOOKINFO arr[700];
-    int size;               //등록된 도서 수
-} BOOKS;
-
 int addBook(BOOKS* books, const BOOKINFO book)
 {
     if(books->size >= 700) return 0;
