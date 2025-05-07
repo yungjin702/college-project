@@ -6,11 +6,16 @@
 #ifndef USERS_H
 #define USERS_H
 
+//사용자 정보를 담을 구조체 선언
 typedef struct userinfo USERINFO;
+//사용자 정보를 관리할 구조체 선언
 typedef struct users USERS;
 
+//사용자 정보를 추가하는 함수 선언언
 int addUser(USERS*, const USERINFO);
+//매개변수로 받은 정보와 일치하는 사용자 정보 찾는 함수 선언
 int findUser(USERS*, const char*, const char*);
+//사용자 이름과 일치하는 정보를 삭제하는 함수 선언
 int deleteUser(USERS*, const char*);
 
 #endif

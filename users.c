@@ -8,13 +8,13 @@
 #include "users.h"
 
 typedef struct userinfo{
-    char username[15];
-    char password[20];
+    char username[15];  //사용자 이름
+    char password[20];  //비밀번호
 }USERINFO;
 
 typedef struct users{
     USERINFO arr[10];
-    int size;
+    int size;           //등록된 사용자 수
 }USERS;
 
 int addUser(USERS* users, const USERINFO user)
@@ -54,7 +54,7 @@ int deleteUser(USERS* users, const char* username)
         if(!strcmp(users->arr[idx].username, username))
         {
             //일치하는 정보의 idx를 기준으로 뒤에 있는 정보를 옮기기
-            while(idx < users->size - 2)
+            while(idx < users->size - 1)
             {
                 users->arr[idx] = users->arr[idx + 1];
                 ++idx;
