@@ -1,4 +1,0 @@
-kim//mypassword
-lee//123@123
-kang//asdfasd
-admin//test123
