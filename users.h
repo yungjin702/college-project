@@ -18,7 +18,7 @@ typedef struct users{
     int size;           //등록된 사용자 수
 }USERS;
 
-//사용자 정보를 추가하는 함수 선언언
+//사용자 정보를 추가하는 함수 선언
 int addUser(USERS*, const USERINFO);
 //매개변수로 받은 정보와 일치하는 사용자 정보 찾는 함수 선언
 int findUser(USERS*, const char*, const char*);
