@@ -7,9 +7,18 @@
 #define BOOKS_H
 
 //도서 정보를 담을 구조체 선언
-typedef struct bookinfo BOOKINFO;
+typedef struct bookinfo{
+    int num;                //순번
+    char bookTitle[100];    //도서 제목
+    char author[50];        //저자명
+    float rating;           //평점
+}BOOKINFO;
+
 //도서 정보를 관리할 구조체 선언
-typedef struct books BOOKS;
+typedef struct books{
+    BOOKINFO arr[700];
+    int size;               //등록된 도서 수
+} BOOKS;
 
 //도서 정보를 추가하는 함수수
 int addBook(BOOKS*, const BOOKINFO);
