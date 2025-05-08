@@ -1,3 +1,5 @@
 test.exe
 .vscode
-file/
+file
+server.exe
+client.exe
