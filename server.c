@@ -6,31 +6,56 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
+#include <process.h>
 #include "users.h"
 #include "books.h"
 #include "command.h"
 
 //파일에 있는 데이터를 원하는 자료형에 맞게 불러오는 함수
 int loadDataList(const char*, void*, const size_t);
-//저장하고자 하는 데이터를 원하는 자료형에 맞게 파일에 저장
+//저장하고자 하는 데이터를 원하는 자료형에 맞게 파일에 저장하는 함수
 int saveDataList(const char*, void*, const size_t);
+//서버에 접속한 클라이언트의 요청을 처리하는 함수
+unsigned WINAPI HandlingClient(void*);
+//프로그램에서 발생한 오류 출력 및 프로그램 종료
+void ErrorHandling(char*);
 
 int main()
 {
-    BOOKS books;
-    books.size = 0;
+    WSADATA wsaData;
+    SOCKET serverSock, clientSock;
+    SOCKADDR_IN serverAddr;
+    SOCKADDR_IN clientAddr;
+    int clientAddrSize;
 
-    USERS users;
-    users.size = 0;
+    if(WSAStartup(MAKEWORD(2,2), &wsaData) != 0)
+        ErrorHandling("WSAStartup() error!");
 
-    loadDataList("file/booklist2.txt", &books, sizeof(BOOKINFO));
-    loadDataList("file/users.txt", &users, sizeof(USERINFO));
+    serverSock = socket(PF_INET, SOCK_STREAM, 0);
 
-    // USERINFO user = {"admin", "test123"};
+    memset(&serverAddr, 0, sizeof(serverAddr));
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    serverAddr.sin_port = htons(atoi(PORT));
 
-    // addUser(&users, user);
+    if(bind(serverSock, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+        ErrorHandling("bind() error");
+    if(listen(serverSock, 5) == SOCKET_ERROR)
+        ErrorHandling("listen() error");
 
-    // saveDataList("file/users.txt", &users, sizeof(USERINFO));
+    printf("server Start\n");
+
+    while(1)
+    {
+        clientAddrSize = sizeof(clientAddr);
+        clientSock = accept(serverSock, (SOCKADDR*)&clientAddr, &clientAddrSize);
+        _beginthreadex(NULL, 0, HandlingClient, (void*)&clientSock, 0, NULL);
+        printf("Connected Client IP: %s\n", inet_ntoa(clientAddr.sin_addr));
+    }
+
+    closesocket(serverSock);
+    WSACleanup();
 
     return 0;
 }
@@ -115,4 +140,27 @@ int saveDataList(const char* filePath, void* data, const size_t dataType)
     }
 
     return 1;
+}
+
+unsigned WINAPI HandlingClient(void* arg)
+{
+    SOCKET clientSock = *((SOCKET*)arg);
+    char msg[BUF_SIZE];
+    int strLen;
+    char** splitMsg;
+
+    while((strLen = recv(clientSock, msg, sizeof(msg), 0)) != 0)
+    {
+        splitMsg = SplitMessage(msg);
+
+        printf("msg: %s\n", splitMsg[0]);
+    }
+}
+
+void ErrorHandling(char* msg)
+{
+    fputs(msg, stderr);
+    fputc('\n', stderr);
+
+    exit(1);
 }
