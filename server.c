@@ -12,6 +12,12 @@
 #include "books.h"
 #include "command.h"
 
+BOOKS books;
+USERS users;
+
+HANDLE hBookMutex;
+HANDLE hUserMutex;
+
 //파일에 있는 데이터를 원하는 자료형에 맞게 불러오는 함수
 int loadDataList(const char*, void*, const size_t);
 //저장하고자 하는 데이터를 원하는 자료형에 맞게 파일에 저장하는 함수
@@ -28,6 +34,12 @@ int main()
     SOCKADDR_IN serverAddr;
     SOCKADDR_IN clientAddr;
     int clientAddrSize;
+
+    books.size = 0;
+    users.size = 0;
+
+    loadDataList("file/booklist2.txt", (void*)&books, sizeof(BOOKINFO));
+    loadDataList("file/users.txt", (void*)&users, sizeof(USERINFO));
 
     if(WSAStartup(MAKEWORD(2,2), &wsaData) != 0)
         ErrorHandling("WSAStartup() error!");
@@ -149,11 +161,19 @@ unsigned WINAPI HandlingClient(void* arg)
     int strLen;
     char** splitMsg;
 
-    while((strLen = recv(clientSock, msg, sizeof(msg), 0)) != 0)
+    while((strLen = recv(clientSock, msg, BUF_SIZE, 0)) != 0)
     {
+        printf("msg: %s\n", msg);
         splitMsg = SplitMessage(msg);
 
-        printf("msg: %s\n", splitMsg[0]);
+        if(!strcmp(splitMsg[0], LOGIN))
+        {
+            sprintf(msg, "%s/%s", LOGIN, (findUser(&users, splitMsg[1], splitMsg[2]) ? "T" : "F"));
+        }
+
+        send(clientSock, msg, BUF_SIZE, 0);
+
+        FreeSplitMessage(splitMsg);
     }
 }
 
