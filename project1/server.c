@@ -1,6 +1,6 @@
 //작성자: 박영진
 //내용  : 온라인 도서정보관리 시스템의 서버 구현
-//수정일: 2025.05.09
+//수정일: 2025.05.14
 //생성일: 2025.05.07
 
 #include <stdio.h>
@@ -41,9 +41,20 @@ int main()
     books.size = 0;
     users.size = 0;
 
+    //뮤텍스 생성
+    hBookMutex = CreateMutex(NULL, 0, NULL);
+    hUserMutex = CreateMutex(NULL, 0, NULL);
+
     //파일데이터 불러오기
-    loadDataList("file/booklist2.txt", (void*)&books, sizeof(BOOKINFO));
-    loadDataList("file/users.txt", (void*)&users, sizeof(USERINFO));
+    if(!loadDataList("file/booklist2.txt", (void*)&books, sizeof(BOOKINFO)))
+    {
+        ErrorHandling("file/booklist2.txt 경로에 파일이 존재하지 않습니다.");
+    }
+
+    if(!loadDataList("file/users.txt", (void*)&users, sizeof(USERINFO)))
+    {
+        ErrorHandling("file/users.txt 경로에 파일이 존재하지 않습니다.");
+    }
 
     if(WSAStartup(MAKEWORD(2,2), &wsaData) != 0)
         ErrorHandling("WSAStartup() error!");
@@ -100,9 +111,6 @@ int loadDataList(const char* filePath, void* data, const size_t dataType)
             strcpy(book.author, split);
             split = strtok(NULL, delimiter);
             book.rating = atof(split);
-
-            //테스트용
-            //printf("%d\t%s\t%s\t%.2f\n", book.num, book.bookTitle, book.author, book.rating);
     
             addBook((BOOKS*)data, book);
         }
@@ -113,9 +121,6 @@ int loadDataList(const char* filePath, void* data, const size_t dataType)
             split = strtok(NULL, delimiter);
             strcpy(user.password, split);
             user.password[strlen(user.password) - 1] = '\0';
-
-            //테스트용
-            //printf("%s\t%s\n", user.username, user.password);
 
             addUser((USERS*)data, user);
         }
@@ -129,24 +134,24 @@ int loadDataList(const char* filePath, void* data, const size_t dataType)
 int saveDataList(const char* filePath, void* data, const size_t dataType)
 {
     FILE *file = fopen(filePath, "w");
-    
+
     if(dataType == sizeof(BOOKINFO))
     {
-        for(int i = 0; i < ((BOOKS*)data)->size; ++i)
+        for(int idx = 0; idx < ((BOOKS*)data)->size; ++idx)
         {
-            const BOOKINFO *book = &((BOOKS*)data)->arr[i];
+            const BOOKINFO *book = &((BOOKS*)data)->arr[idx];
 
             //만약 제대로 저장되지 않은 경우 0을 반환하도록 함
             if(fprintf(file, "%d\t%s\t%s\t%.2f\n",
-                i + 1, book->bookTitle, book->author, book->rating) == 0)
+                idx + 1, book->bookTitle, book->author, book->rating) == 0)
             return 0;
         }
     }
     else
     {
-        for(int i = 0; i < ((USERS*)data)->size; ++i)
+        for(int idx = 0; idx < ((USERS*)data)->size; ++idx)
         {
-            const USERINFO *user = &((USERS*)data)->arr[i];
+            const USERINFO *user = &((USERS*)data)->arr[idx];
 
             //만약 제대로 저장되지 않은 경우 0을 반환하도록 함
             if(fprintf(file, "%s//%s\n",
@@ -162,6 +167,7 @@ int saveDataList(const char* filePath, void* data, const size_t dataType)
 
 int compareByRate(const void* a, const void* b)
 {
+    //도서 arr[*a]의 평점보다 도서 arr[*b]의 평점이 더 높으면 이동
     if(books.arr[*(int*)a].rating < books.arr[*(int*)b].rating)
         return 1;
     else if(books.arr[*(int*)a].rating == books.arr[*(int*)b].rating)
@@ -177,9 +183,12 @@ unsigned WINAPI HandlingClient(void* arg)
     int strLen;
     char** splitMsg;
 
-    while((strLen = recv(clientSock, msg, BUF_SIZE, 0)) != 0)
+    while((strLen = recv(clientSock, msg, BUF_SIZE, 0)) != -1)
     {
+        //클라이언트가 보낸 메시지 출력
         printf("msg: %s\n", msg);
+
+        //받은 메시지 분리
         splitMsg = SplitMessage(msg);
 
         //로그인 요청일 경우
@@ -363,6 +372,7 @@ unsigned WINAPI HandlingClient(void* arg)
             ReleaseMutex(hUserMutex);
         }
 
+        //동적 할당된 메모리 해제
         FreeSplitMessage(splitMsg);
     }
 

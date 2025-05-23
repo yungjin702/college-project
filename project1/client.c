@@ -1,6 +1,6 @@
 //작성자: 박영진
 //내용  : 온라인 도서정보관리 시스템의 클라이언트 구현
-//수정일: 2025.05.09
+//수정일: 2025.05.17
 //생성일: 2025.05.08
 
 #include <stdio.h>
@@ -44,6 +44,9 @@ int main()
     SOCKADDR_IN serverAddr;
     char serverIp[100];
     char select;
+
+    //콘솔에서 한글이 깨지는 현상을 해결하기 위한 코드
+    system("chcp 65001 > nul");
 
     //서버 IP 입력
     printf("Input server IP: ");
