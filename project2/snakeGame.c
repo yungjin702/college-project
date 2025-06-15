@@ -135,6 +135,7 @@ POS createApple(int playerNum)
 {
     POS pos;
 
+    //사과 생성 위치 결정
     do{
         pos.x = rand() % BOARD_X;
         pos.y = rand() % BOARD_Y;
@@ -175,6 +176,7 @@ void printObject(int playerNum, int objNum, int x, int y)
 
 unsigned WINAPI snakeGame(void* arg)
 {
+    //시드 초기화
     srand(time(NULL));
     running = 1;
 
