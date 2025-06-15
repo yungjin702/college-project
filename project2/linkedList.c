@@ -66,8 +66,3 @@ int deleteNode(NODE** list, void* data, CompareFunc compare)
 
     return 0;
 }
-
-int compare(const void* a, const void* b)
-{
-    return (*(int*)a == *(int*)b);
-}
