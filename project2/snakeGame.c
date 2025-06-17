@@ -24,7 +24,6 @@ POS direction[4] = {{0, -1}, {-1, 0}, {0, 1}, {1, 0}};     //방향
 int score = 0;                                             //점수
 QUEUE player[4] = {0,};                                    //플레이어들의 위치
 int board[4][BOARD_Y][BOARD_X] = {0,};                     //맵 정보
-HANDLE pMutex[4];
 
 unsigned WINAPI inputThread(void* arg)
 {
@@ -81,11 +80,6 @@ void init()
         enqueue(&player[i], temp);
     }
 
-    for(int i = 0; i < 4; ++i)
-    {
-        pMutex[i] = CreateMutex(NULL, 0, NULL);
-    }
-
     //맵 정보 초기화
     for(int i = 0; i < 4; ++i)
     {
@@ -99,8 +93,6 @@ void init()
 
 int move(int playerNum, int key) //0: 충돌 발생, 1: 정상 이동, 2: 사과을 먹음
 {
-    //WaitForSingleObject(pMutex[playerNum], INFINITE);
-
     POS* pos = (POS*)player[playerNum].rear->data;
     POS nextPos = direction[key];
     int result = 0;
@@ -143,8 +135,6 @@ int move(int playerNum, int key) //0: 충돌 발생, 1: 정상 이동, 2: 사과
     temp->y = nextPos.y;
     enqueue(&player[playerNum], temp);
 
-    //ReleaseMutex(pMutex[playerNum]);
-
     return result;
 }
 
@@ -167,12 +157,8 @@ POS createApple(int playerNum)
 
 void updateApplePos(int playerNum, int x, int y)
 {
-    //WaitForSingleObject(pMutex[playerNum], INFINITE);
-
     printObject(playerNum, APPLE, x, y);
     board[playerNum][y][x] = APPLE;
-
-    //ReleaseMutex(pMutex[playerNum]);
 }
 
 void initPrint(int playerNum)
