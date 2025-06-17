@@ -21,6 +21,7 @@ void initRooms(ROOMS* rooms)
     {
         rooms->arr[i].emptyClientNum.front = NULL;
         rooms->arr[i].emptyClientNum.rear = NULL;
+        strcpy(rooms->arr[i].roomName, "EMPTY");
 
         int* temp = (int*)malloc(sizeof(int));
         *temp = i;
@@ -42,6 +43,7 @@ int* createRoom(ROOMS* rooms, const char* roomName)
     room->userCount = 0;
     memset(room->readyUser, 0, sizeof(room->readyUser));
     room->overCount = 0;
+    memset(room->clientSocks, INVALID_SOCKET, sizeof(room->clientSocks));
     memset(room->scores, 0, sizeof(room->scores));
 
     for(int i = 0; i < 4; ++i)
@@ -61,15 +63,18 @@ void removeRoom(ROOMS* rooms, const int roomNum)
     ROOMINFO* room = &rooms->arr[roomNum];
     int* emptyRoomNum = (int*)malloc(sizeof(int));
 
+    //이름 변경
     strcpy(room->roomName, "EMPTY");
     *emptyRoomNum = roomNum;
 
+    //해당 방의 emptyClientNum 비우기
     while(!isEmpty(&room->emptyClientNum))
     {   
         int* temp = (int*)dequeue(&room->emptyClientNum);
         free(temp);
     }
 
+    //해당 방 번호를 emptyRooms에 넣기
     enqueue(&rooms->emptyRooms, (void*)emptyRoomNum);
     --rooms->size;
 }
@@ -82,6 +87,7 @@ int readyClient(ROOMS* rooms, int roomNum, int clientNum)
     //ready 상태를 반전(0이면 1, 1이면 0)
     room->readyUser[clientNum] = !room->readyUser[clientNum];
 
+    //ready한 유저 확인
     for(int i = 0; i < 4; ++i)
     {
         result += room->readyUser[i];
@@ -94,9 +100,12 @@ int readyClient(ROOMS* rooms, int roomNum, int clientNum)
 int connectClientToRoom(ROOMS* rooms, int roomNum, USERINFO* user, SOCKET clientSock)
 {
     ROOMINFO* room = &rooms->arr[roomNum];
+
+    //방에서 사용할 클라이언트 번호 부여
     int* clientNum = (int*)dequeue(&room->emptyClientNum);
     int result = *clientNum;
 
+    //클라이언트 정보 저장
     room->clientSocks[*clientNum] = clientSock;
     room->users[*clientNum] = user;
     ++room->userCount;
@@ -112,6 +121,9 @@ void disconnectClientFromRoom(ROOMS* rooms, int roomNum, int clientNum)
     room->clientSocks[clientNum] = INVALID_SOCKET;
     room->readyUser[clientNum] = 0;
     --room->userCount;
+
+    if(room->userCount <= 0)
+        removeRoom(rooms, roomNum);
 }
 
 // int main()

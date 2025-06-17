@@ -17,7 +17,7 @@ const char* CREATE_USER;
 const char* MODIFY_PW;
 const char* DELETE_USER;
 const char* ROOM_INFO;
-const char* GET_ROOMINFO;
+const char* GET_ROOMLIST;
 const char* CREATE_ROOM;
 const char* ENTER_ROOM;
 const char* UPDATED_ROOM;

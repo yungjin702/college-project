@@ -3,7 +3,6 @@
 //수정일: 2025.06.15
 //생성일: 2025.06.15
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "users.h"
@@ -76,39 +75,4 @@ int compareUsername(const void* user, const void* username)
     else
         return 0;
 }
-
-// int main()
-// {
-//     USERS users;
-//     users.list = 0;
-//     users.size = 0;
-
-//     for(int i = 0; i < 10; ++i)
-//     {
-//         USERINFO* temp = (USERINFO*)malloc(sizeof(USERINFO));
-//         char tempS[20]; sprintf(tempS, "user%d", i);
-
-//         strcpy(temp->username, tempS);
-//         strcpy(temp->password, tempS);
-
-//         printf("%d\n", addUser(&users, temp));
-//     }
-
-//     printf("%d", users.size);
-
-//     USERINFO* user = findUser(&users, "user0");
-//     printf("%s/%s\n", user->username, user->password);
-
-//     modifyPassword(&users, "user0", "user");
-//     printf("%s/%s\n", user->username, user->password);
-
-//     printf("%d\n", deleteUser(&users, "user0"));
-//     user = findUser(&users, "user0");
-
-//     if(user == NULL) printf("NULL\n");
-
-//     printf("%d\n", users.size);
-
-//     return 0;
-// }
 

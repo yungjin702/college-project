@@ -13,16 +13,18 @@
 #include "linkedList.h"
 #include "queue.h"
 #include "graphic.h"
+#include "command.h"
 
 //전역 변수 선언
 volatile int running = 0;                                   //게임 중인지 확인
 volatile int key = 0;                                       //이동 방향
 const char* object[3] = {" ", "■", "★"};                   //게임에서 사용할 오브젝트 문자
-int printX[4] = {1, 18, 35, 52};                           //출력 위치
+int printX[4] = {1, 20, 39, 58};                           //출력 위치
 POS direction[4] = {{0, -1}, {-1, 0}, {0, 1}, {1, 0}};     //방향
 int score = 0;                                             //점수
-QUEUE player[4] = {0};                                     //플레이어들의 위치
+QUEUE player[4] = {0,};                                    //플레이어들의 위치
 int board[4][BOARD_Y][BOARD_X] = {0,};                     //맵 정보
+HANDLE pMutex[4];
 
 unsigned WINAPI inputThread(void* arg)
 {
@@ -36,22 +38,28 @@ unsigned WINAPI inputThread(void* arg)
             switch (toupper(ch))
             {
             case 'W':
-                key = 0;
+                if(key != 2)
+                    key = 0;
                 break;
             case 'A':
-                key = 1;
+                if(key != 3)
+                    key = 1;
                 break;
             case 'S':
-                key = 2;
+                if(key != 0)
+                    key = 2;
                 break;
             case 'D':
-                key = 3;
+                if(key != 1)
+                    key = 3;
                 break;
             default:
                 break;
             }
         }
     }
+
+    return 0;
 }
 
 void init()
@@ -73,6 +81,11 @@ void init()
         enqueue(&player[i], temp);
     }
 
+    for(int i = 0; i < 4; ++i)
+    {
+        pMutex[i] = CreateMutex(NULL, 0, NULL);
+    }
+
     //맵 정보 초기화
     for(int i = 0; i < 4; ++i)
     {
@@ -86,6 +99,8 @@ void init()
 
 int move(int playerNum, int key) //0: 충돌 발생, 1: 정상 이동, 2: 사과을 먹음
 {
+    //WaitForSingleObject(pMutex[playerNum], INFINITE);
+
     POS* pos = (POS*)player[playerNum].rear->data;
     POS nextPos = direction[key];
     int result = 0;
@@ -128,6 +143,8 @@ int move(int playerNum, int key) //0: 충돌 발생, 1: 정상 이동, 2: 사과
     temp->y = nextPos.y;
     enqueue(&player[playerNum], temp);
 
+    //ReleaseMutex(pMutex[playerNum]);
+
     return result;
 }
 
@@ -150,12 +167,18 @@ POS createApple(int playerNum)
 
 void updateApplePos(int playerNum, int x, int y)
 {
+    //WaitForSingleObject(pMutex[playerNum], INFINITE);
+
     printObject(playerNum, APPLE, x, y);
     board[playerNum][y][x] = APPLE;
+
+    //ReleaseMutex(pMutex[playerNum]);
 }
 
 void initPrint(int playerNum)
 {
+    drawBox(printX[playerNum] - 1, 3, BOARD_X + 1, BOARD_Y + 1);
+
     for(int i = 0; i < BOARD_Y; ++i)
     {
         gotoxy(printX[playerNum], 4 + i);
@@ -176,61 +199,63 @@ void printObject(int playerNum, int objNum, int x, int y)
 
 unsigned WINAPI snakeGame(void* arg)
 {
+    init();
     //시드 초기화
     srand(time(NULL));
+
+    for(int i = 0; i < 4; ++i)
+    {
+        initPrint(i);
+    }
+    
     running = 1;
-
-    HANDLE inputHandle = (HANDLE)_beginthreadex(NULL, 0, inputThread, NULL, 0, NULL);
+    
     PLAYERINFO playerInfo = *((PLAYERINFO*)arg);
-    int tempKey;
-    int result;
-    extern char msg[];
+    int tempKey;            //key의 값을 임시로 저장
+    int result;             //move()의 결과를 저장하기 위한 변수
+    extern char msg[];      //client.c에 있는 전역 변수를 가지고 옴
+    POS applePos = createApple(playerInfo.playerNum);
 
-    POS temp = createApple(playerInfo.playerNum);
-    gotoxy(0, BOARD_Y + 8);
-    printf("%d %d", temp.x, temp.y);
+    Sleep(500);
+
+    //CREATE_APPLE 메시지 전송
+    sprintf(msg, "%s/%d/%d/%d/%d", CREATE_APPLE, 
+        playerInfo.roomNum, playerInfo.playerNum, applePos.x, applePos.y);
+    send(playerInfo.sock, msg, BUF_SIZE, 0);
+
+    Sleep(500);
+
+    _beginthreadex(NULL, 0, inputThread, NULL, 0, NULL);
 
     do{
         tempKey = key;
         result = move(playerInfo.playerNum, tempKey);
-        //메세지 전송
+        
+        //NEXT_DIRE 메시지 전송
+        sprintf(msg, "%s/%d/%d/%d", NEXT_DIRE, 
+        playerInfo.roomNum, playerInfo.playerNum, tempKey);
+        send(playerInfo.sock, msg, BUF_SIZE, 0);
+
+        //만약 사과를 먹었다면
         if(result == 2)
         {
-            temp = createApple(playerInfo.playerNum);
+            applePos = createApple(playerInfo.playerNum);
+
+            //CREATE_APPLE 메시지 전송
+            sprintf(msg, "%s/%d/%d/%d/%d", CREATE_APPLE, 
+                playerInfo.roomNum, playerInfo.playerNum, applePos.x, applePos.y);
+            send(playerInfo.sock, msg, BUF_SIZE, 0);
         }
     
-    Sleep(100);
+        Sleep(150);
     }while(result != 0);
 
     running = 0;
 
+    //GAME_OVER 메시지 전송
+    sprintf(msg, "%s/%d/%d/%d", GAME_OVER, 
+        playerInfo.roomNum, playerInfo.playerNum, score);
+    send(playerInfo.sock, msg, BUF_SIZE, 0);
+
     return 0;
 }
-
-// int main()
-// {   
-//     HANDLE game;
-
-//     PLAYERINFO playerinfo;
-//     playerinfo.playerNum = 0;
-
-//     for(int i = 0; i < 4; ++i)
-//     {
-//         player[i].front = NULL;
-//         player[i].rear = NULL;
-//     }
-
-//     system("cls");
-
-//     drawBox(0, 3, BOARD_X + 2, BOARD_Y + 1);
-
-//     init();
-//     initPrint(0);
-//     game = (HANDLE)_beginthreadex(NULL, 0, snakeGame, (void*)&playerinfo, 0, NULL);
-
-//     WaitForSingleObject(game, INFINITE);
-
-//     system("pause");
-
-//     return 0;
-// }
