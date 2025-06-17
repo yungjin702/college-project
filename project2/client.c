@@ -468,7 +468,7 @@ unsigned WINAPI HandleRoomMessage(void* arg)
                 if(strcmp(splitMsg[2], "EMPTY"))
                     printf("%d: %s/승리: %s회/평균: %s점", i + 1, splitMsg[2], splitMsg[3], splitMsg[4]);
                 else
-                    printf("%d: %s", i, splitMsg[2]);
+                    printf("%d: %s", i + 1, splitMsg[2]);
 
                 FreeSplitMessage(splitMsg);
             }
