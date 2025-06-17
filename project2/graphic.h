@@ -10,5 +10,7 @@
 void gotoxy(int, int);
 //콘솔의 x, y 위치에서 W x H 크기의 사각형 테두리를 출력하는 함수
 void drawBox(int, int, int, int);
+//콘솔의 x, y 위치에서 size만큼 공백 입력하는 함수
+void removeLine(int, int, int);
 
 #endif

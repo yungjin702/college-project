@@ -1,6 +1,6 @@
 //작성자: 박영진
 //내용  : 스네이크 게임 구현을 위한 snakeGame.c 정의
-//수정일: 2025.06.15
+//수정일: 2025.06.17
 //생성일: 2025.06.15
 
 #include <stdio.h>
@@ -24,6 +24,7 @@ POS direction[4] = {{0, -1}, {-1, 0}, {0, 1}, {1, 0}};     //방향
 int score = 0;                                             //점수
 QUEUE player[4] = {0,};                                    //플레이어들의 위치
 int board[4][BOARD_Y][BOARD_X] = {0,};                     //맵 정보
+HANDLE conMutex;
 
 unsigned WINAPI inputThread(void* arg)
 {
@@ -63,6 +64,8 @@ unsigned WINAPI inputThread(void* arg)
 
 void init()
 {
+    conMutex = CreateMutex(NULL, 0, NULL);
+
     running = 0;
     key = 0;
     score = 0;
@@ -126,6 +129,7 @@ int move(int playerNum, int key) //0: 충돌 발생, 1: 정상 이동, 2: 사과
             result = 1;
     }
 
+    //맵 정보 반영 및 화면 출력
     board[playerNum][nextPos.y][nextPos.x] = PLAYER;
     printObject(playerNum, PLAYER, nextPos.x, nextPos.y);
 
@@ -149,6 +153,7 @@ POS createApple(int playerNum)
 
     }while(board[playerNum][pos.y][pos.x] != EMPTY);
 
+    //맵 정보 반영 및 화면 출력
     board[playerNum][pos.y][pos.x] = APPLE;
     printObject(playerNum, APPLE, pos.x, pos.y);
 
@@ -179,8 +184,10 @@ void initPrint(int playerNum)
 
 void printObject(int playerNum, int objNum, int x, int y)
 {
+    WaitForSingleObject(conMutex, INFINITE);
     gotoxy(printX[playerNum] + x, 4 + y);
     printf("%s", object[objNum]);
+    ReleaseMutex(conMutex);
 }
 
 unsigned WINAPI snakeGame(void* arg)

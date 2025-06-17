@@ -14,12 +14,14 @@ void append(NODE** list, void* data)
 
     NODE* current = *list;
 
+    //만약 연결리스트가 비어있는 경우
     if(*list == NULL)
     {
         *list = temp;
         return;
     }
 
+    //생성 위치 탐색
     while(current->next != NULL)
     {
         current = current->next;
@@ -32,6 +34,7 @@ NODE* search(NODE* list, void* data, CompareFunc compare)
 {
     NODE* current = list;
 
+    //compare 함수가 true인 current 찾기
     while(current != NULL)
     {
         if(compare(current->data, data))
@@ -46,6 +49,7 @@ int deleteNode(NODE** list, void* data, CompareFunc compare)
 {
     NODE* current = *list, *prev = NULL;
 
+    //compare 함수가 true인 current을 찾고 해당 node 삭제
     while(current != NULL)
     {
         if(compare(current->data, data))

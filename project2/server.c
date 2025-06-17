@@ -1,6 +1,6 @@
 //작성자: 박영진
 //내용  : 온라인 스네이크 게임의 서버 프로그램 구현
-//수정일: 2025.06.15
+//수정일: 2025.06.17
 //생성일: 2025.06.15
 
 #include <stdio.h>
@@ -107,6 +107,9 @@ int loadDataList(const char* filePath, void* data, const size_t dataType)
         user->winCount = atoi(split);
         split = strtok(NULL, delimiter);
 
+        user->playCount = atoi(split);
+        split = strtok(NULL, delimiter);
+
         user->meanScore = atoi(split);
 
         addUser((USERS*)data, user);
@@ -127,8 +130,8 @@ int saveDataList(const char* filePath, void* data, const size_t dataType)
     {
         USERINFO* data = (USERINFO*)current->data;
 
-        if(fprintf(file, "%s/%s/%d/%d\n", 
-                data->username, data->password, data->winCount, data->meanScore) == 0)
+        if(fprintf(file, "%s/%s/%d/%d/%d\n", 
+                data->username, data->password, data->winCount, data->playCount, data->meanScore) == 0)
             return 0;
 
         current = current->next;
@@ -148,8 +151,11 @@ void SendUserInfo(int roomNum)
     for(int i = 0; i < 4; ++i)
     {
         if(room->clientSocks[i] == INVALID_SOCKET) continue;
+
+        //방에 접속 중인 클라이언트에게 방 정보가 변경됨을 알림
         send(room->clientSocks[i], UPDATED_ROOM, BUF_SIZE, 0);
 
+        //변경된 유저 정보를 전송
         for(int j = 0; j < 4; ++j)
         {
             isUserExist = (room->clientSocks[j] != INVALID_SOCKET);
@@ -228,6 +234,7 @@ unsigned WINAPI HandlingClient(void* arg)
                 strcpy(user->username, splitMsg[1]);
                 strcpy(user->password, splitMsg[2]);
                 user->winCount = 0;
+                user->playCount = 0;
                 user->meanScore = 0;
 
                 result = addUser(&users, user);
@@ -278,9 +285,11 @@ unsigned WINAPI HandlingClient(void* arg)
         {
             WaitForSingleObject(hRoomMutex, INFINITE);
 
+            //생성된 방 수 전송
             sprintf(msg, "%s/%d", GET_ROOMLIST, rooms.size);
             send(clientSock, msg, BUF_SIZE, 0);
 
+            //생성된 방 정보 전송
             for(int i = 0; i < 5; ++i)
             {
                 if(!strcmp(rooms.arr[i].roomName, "EMPTY")) continue;
@@ -453,6 +462,7 @@ unsigned WINAPI HandleClientInRoom(void* arg)
                     send(room->clientSocks[i], msg, BUF_SIZE, 0);
                 }
 
+                //게임이 종료되었기 때문에 방 삭제
                 removeRoom(&rooms, atoi(splitMsg[1]));
             }
 
@@ -500,12 +510,16 @@ int GameResult(int roomNum)
     {
         if(room->clientSocks[i] == INVALID_SOCKET) continue;
 
-        room->users[i]->meanScore = room->users[i]->meanScore == 0 ? room->users[i]->meanScore 
-                                        : (room->users[i]->meanScore + room->scores[i]) / 2;
+        room->users[i]->playCount++;
+
+        //누적 평균 계산: 현재 평균 + ((방금 판 점수 - 현재 평균) / 게임 횟수)
+        room->users[i]->meanScore = room->users[i]->meanScore + 
+                                    ((room->scores[i] - room->users[i]->meanScore) / room->users[i]->playCount);
         if(i == max && !isDraw)
             room->users[i]->winCount++;
     }
 
+    //업데이트 된 사용자 정보를 파일에 저장
     saveDataList("file/users.txt", (void*)&users, sizeof(USERINFO));
 
     if(isDraw) return -1;

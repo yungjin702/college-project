@@ -1,6 +1,6 @@
 //작성자: 박영진
 //내용  : 온라인 스네이크 게임의 클라이언트 프로그램 구현
-//수정일: 2025.06.15
+//수정일: 2025.06.17
 //생성일: 2025.06.15
 
 #include <stdio.h>
@@ -418,7 +418,11 @@ unsigned WINAPI InputRoom(void* arg)
                 ReadyGame(playerInfo);
                 ready = !ready;
                 gotoxy(0, 5);
-                printf("%s", (ready ? "다른 플레이어를 기다리는 중" : "                                       "));
+
+                if(ready)
+                    printf("%s", "다른 플레이어를 기다리는 중");
+                else
+                    removeLine(0, 5, 40);
                 break;
             default:
                 break;
@@ -454,6 +458,7 @@ unsigned WINAPI HandleRoomMessage(void* arg)
 
             for(int i = 0; i < 4; ++i)
             {
+                removeLine(0, i, 50);
                 gotoxy(0, i);
 
                 recv(playerInfo.sock, recvMsg, BUF_SIZE, 0);
@@ -461,7 +466,7 @@ unsigned WINAPI HandleRoomMessage(void* arg)
                 strcpy(userNames[atoi(splitMsg[1])], splitMsg[2]);
 
                 if(strcmp(splitMsg[2], "EMPTY"))
-                    printf("%d: %s/%s/%s", i, splitMsg[2], splitMsg[3], splitMsg[4]);
+                    printf("%d: %s/승리: %s회/평균: %s점", i, splitMsg[2], splitMsg[3], splitMsg[4]);
                 else
                     printf("%d: %s", i, splitMsg[2]);
 

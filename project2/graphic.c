@@ -1,6 +1,6 @@
 //작성자: 박영진
 //내용  : 클라이언트 프로그램에서 사용할 그래픽 관련 graphic.c 정의
-//수정일: 2025.06.15
+//수정일: 2025.06.17
 //생성일: 2025.06.15
 
 #include <stdio.h>
@@ -41,4 +41,13 @@ void drawBox(int x, int y, int w, int h)
         printf("━");
     }
     printf("┛");
+}
+
+void removeLine(int x, int y, int size)
+{
+    gotoxy(x, y);
+    for(int i = 0; i < size; ++i)
+    {
+        printf(" ");
+    }
 }

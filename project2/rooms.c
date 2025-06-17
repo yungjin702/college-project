@@ -17,6 +17,7 @@ void initRooms(ROOMS* rooms)
     rooms->emptyRooms.rear = NULL;
     rooms->size = 0;
 
+    //arr[i]의 ROOMINFO 초기화
     for(int i = 0; i < 5; ++i)
     {
         rooms->arr[i].emptyClientNum.front = NULL;
@@ -93,6 +94,7 @@ int readyClient(ROOMS* rooms, int roomNum, int clientNum)
         result += room->readyUser[i];
     }
 
+    //방에 접속한 인원이 2명 이상이고 모든 플레이어가 준비 완료일 때 1 반환
     if(room->userCount >= 2 && room->userCount == result) return 1;
     else return 0;
 }
@@ -122,6 +124,7 @@ void disconnectClientFromRoom(ROOMS* rooms, int roomNum, int clientNum)
     room->readyUser[clientNum] = 0;
     --room->userCount;
 
+    //방에 아무도 없는 경우 방 삭제
     if(room->userCount <= 0)
         removeRoom(rooms, roomNum);
 }

@@ -1,6 +1,6 @@
 //작성자: 박영진
 //내용  : 사용자 정보 및 관리를 위한 user.h 정의
-//수정일: 2025.06.15
+//수정일: 2025.06.17
 //생성일: 2025.06.15
 
 #ifndef USERS_H
@@ -13,8 +13,9 @@ typedef struct node NODE;
 typedef struct userinfo{
     char username[15];  //사용자 이름
     char password[20];  //비밀번호
-    int winCount;
-    int meanScore;
+    int winCount;       //승리 횟수
+    int playCount;      //게임 횟수
+    int meanScore;      //평균 점수
 }USERINFO;
 
 //사용자 정보를 관리할 구조체 선언
