@@ -223,7 +223,7 @@ unsigned WINAPI snakeGame(void* arg)
     do{
         tempKey = key;
         result = move(playerInfo.playerNum, tempKey);
-        
+
         //NEXT_DIRE 메시지 전송
         sprintf(msg, "%s/%d/%d/%d", NEXT_DIRE, 
         playerInfo.roomNum, playerInfo.playerNum, tempKey);
@@ -232,6 +232,8 @@ unsigned WINAPI snakeGame(void* arg)
         //만약 사과를 먹었다면
         if(result == 2)
         {
+            if(score >= 254) break;
+
             applePos = createApple(playerInfo.playerNum);
 
             //CREATE_APPLE 메시지 전송
