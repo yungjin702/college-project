@@ -167,9 +167,9 @@ int Login(SOCKET sock)
     char password[20];
     char** splitMsg;
 
-    printf("Input username: ");
+    printf("사용자 이름을 입력해주세요: ");
     scanf("%s", username);
-    printf("Input password: ");
+    printf("비밀번호를 입력해주세요: ");
     scanf("%s", password);
     getchar(); //입력 버퍼 지우기
 
@@ -466,7 +466,7 @@ unsigned WINAPI HandleRoomMessage(void* arg)
                 strcpy(userNames[atoi(splitMsg[1])], splitMsg[2]);
 
                 if(strcmp(splitMsg[2], "EMPTY"))
-                    printf("%d: %s/승리: %s회/평균: %s점", i, splitMsg[2], splitMsg[3], splitMsg[4]);
+                    printf("%d: %s/승리: %s회/평균: %s점", i + 1, splitMsg[2], splitMsg[3], splitMsg[4]);
                 else
                     printf("%d: %s", i, splitMsg[2]);
 
